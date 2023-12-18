@@ -144,6 +144,7 @@ class Maze():
         self.gridCells = ()
         self.currentCell = None
         self.nextCell = None
+        self.running = False
 
         pygame.init()
         # Adding THICKNESS here so that the outer most right lines and lower
@@ -167,6 +168,9 @@ class Maze():
         self.drawMazeSurface()
         self.screen.blit(self.mazeSurface, (0, 0))
 
+        pygame.display.flip()
+        self.clock.tick(self.fps)
+
     def generateMaze(self):
         self.reset()
         breakCount = 1
@@ -183,6 +187,20 @@ class Maze():
                 self.currentCell = self.nextCell
             elif stack:
                 self.currentCell = stack.pop()
+
+    def getInput(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                self.running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
+                    pygame.quit()
+                    self.running = False
+                elif event.key == pygame.K_r:
+                    self.reset()
+                elif event.key == pygame.K_g:
+                    self.generateMaze()
 
     def removeWalls(self, currentCell, nextCell):
         dcol = currentCell.getIndex("column")-nextCell.getIndex("column")
@@ -213,22 +231,8 @@ class Maze():
     def run(self):
         self.reset()
 
-        running = True
-        while running:
-
+        self.running = True
+        while self.running:
+            #self.updateScreen()
             self.drawScreen()
-            pygame.display.flip()
-            self.clock.tick(self.fps)
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
-                        pygame.quit()
-                        running = False
-                    elif event.key == pygame.K_r:
-                        self.reset()
-                    elif event.key == pygame.K_g:
-                        self.generateMaze()
+            self.getInput()
