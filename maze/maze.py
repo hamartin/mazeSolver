@@ -186,6 +186,8 @@ class Maze():
         # lines does not get drawn outside the window.
         self.mazeSurface = pygame.Surface((self.size["width"]+self.THICKNESS,
                                            self.size["height"]+self.THICKNESS))
+        self.scoreSurface = pygame.Surface((300,
+                                            self.size["height"]+self.THICKNESS))
         # The menu on the right is 300 wide.
         self.screen = pygame.display.set_mode(
                 (self.size["width"]+300,
@@ -198,10 +200,15 @@ class Maze():
             cell.draw()
         self.currentCell.drawCurrentCell()
 
+    def drawScoreSurface(self):
+        self.scoreSurface.fill(COLORS["darkslategray"])
+
     def drawScreen(self):
         self.screen.fill(COLORS["darkslategray"])
         self.drawMazeSurface()
+        self.drawScoreSurface()
         self.screen.blit(self.mazeSurface, (0, 0))
+        self.screen.blit(self.scoreSurface, (self.size["width"]+1, 0))
 
         pygame.display.flip()
         self.clock.tick(self.fps)
@@ -267,8 +274,8 @@ class Maze():
         # The cell to move to if we are not colliding with anything.
         nextCell = self.gridCells[findIndex(col, row, self.tiles["numbTiles"])]
         if self.currentCell.collide(nextCell):
-            print(f"Points: {self.points}")
             self.points -= 1
+            print(f"Points: {self.points}")
         else:
             self.currentCell = nextCell
 
