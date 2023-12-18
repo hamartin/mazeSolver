@@ -19,6 +19,8 @@ def getArguments():
                         help="Makes the application become more verbose.")
     parser.add_argument("--food", required=False, default=3,
                         help="The number of food items on screen at any given time.")
+    parser.add_argument("--foodpoint", required=False, default=10,
+                        help="The number of points for eating food.")
 
     return parser.parse_args()
 

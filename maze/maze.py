@@ -253,7 +253,7 @@ class Maze():
         self.clock.tick(self.fps)
 
     def eatFood(self, foodCell):
-        self.points += 10
+        self.points += self.args.foodpoint
         self.foodCells.remove(foodCell)
         self.foodCells.append(Food(self.args, self.tiles, self.mazeSurface))
 
