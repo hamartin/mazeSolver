@@ -14,6 +14,9 @@ def getArguments():
                         help="Width of the application in pixels.")
     parser.add_argument("--fps", type=int, required=False, default=60,
                         help="The max framerate of the game.")
+    parser.add_argument("--debug", required=False, default=False,
+                        action="store_true",
+                        help="Makes the application become more verbose.")
 
     return parser.parse_args()
 

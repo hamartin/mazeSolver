@@ -19,7 +19,8 @@ class Cell():
 
     THICKNESS = 2
 
-    def __init__(self, index, tiles, screen):
+    def __init__(self, args, index, tiles, screen):
+        self.args = args
         # self.index = {"column": val, "row": val}
         self.index = index
         # self.tiles = {"numbTiles": val, "tileWidth": val, "tileHeight": val}
@@ -71,6 +72,32 @@ class Cell():
             neighbours.append(left)
         return choice(neighbours) if neighbours else None
 
+    def collide(self, cell):
+        assert isinstance(cell, Cell)
+        dcol = self.index["column"]-cell.getIndex("column")
+        drow = self.index["row"]-cell.getIndex("row")
+
+        if dcol == -1:
+            wall = cell.getWall("left")
+            if wall and self.args.debug:
+                print("Collision with right cell.")
+            return wall
+        elif dcol == 1:
+            wall = cell.getWall("right")
+            if wall and self.args.debug:
+                print("Collision with left cell.")
+            return wall
+        elif drow == -1:
+            wall = cell.getWall("top")
+            if wall and self.args.debug:
+                print("Collision with cell below.")
+            return wall
+        elif drow == 1:
+            wall = cell.getWall("bottom")
+            if wall and self.args.debug:
+                print("Collision with cell above.")
+            return wall
+
     def draw(self):
         col = self.index["column"]*self.tiles["tileWidth"]
         row = self.index["row"]*self.tiles["tileHeight"]
@@ -118,6 +145,10 @@ class Cell():
         if not colrow:
             return self.index["column"], self.index["row"]
         return self.index[colrow]
+
+    def getWall(self, direction):
+        assert direction in ["left", "right", "top", "bottom"]
+        return self.walls[direction]
 
     def removeWall(self, wall):
         assert wall in ["left", "top", "right", "bottom"]
@@ -218,6 +249,7 @@ class Maze():
     def move(self, direction):
         assert direction in ["left", "up", "right", "down"]
         col, row = self.currentCell.getIndex()
+
         if direction == "left":
             if col > 0:
                 col -= 1
@@ -230,7 +262,11 @@ class Maze():
         elif direction == "down":
             if row < self.tiles["numbTiles"]-1:
                 row += 1
-        self.currentCell = self.gridCells[findIndex(col, row, self.tiles["numbTiles"])]
+
+        # The cell to move to if we are not colliding with anything.
+        nextCell = self.gridCells[findIndex(col, row, self.tiles["numbTiles"])]
+        if not self.currentCell.collide(nextCell):
+            self.currentCell = nextCell
 
     def removeWalls(self, currentCell, nextCell):
         dcol = currentCell.getIndex("column")-nextCell.getIndex("column")
@@ -249,8 +285,8 @@ class Maze():
             nextCell.removeWall("top")
 
     def reset(self):
-        self.gridCells = [Cell({"column": col, "row": row}, self.tiles,
-                               self.mazeSurface)
+        self.gridCells = [Cell(self.args, {"column": col, "row": row},
+                               self.tiles, self.mazeSurface)
                           for col in range(self.tiles["numbTiles"])
                           for row in range(self.tiles["numbTiles"])]
         for cell in self.gridCells:
