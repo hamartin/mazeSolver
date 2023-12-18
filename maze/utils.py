@@ -17,6 +17,8 @@ def getArguments():
     parser.add_argument("--debug", required=False, default=False,
                         action="store_true",
                         help="Makes the application become more verbose.")
+    parser.add_argument("--food", required=False, default=3,
+                        help="The number of food items on screen at any given time.")
 
     return parser.parse_args()
 

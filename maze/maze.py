@@ -1,6 +1,6 @@
 
 
-from random import choice
+from random import choice, randint
 
 import pygame
 
@@ -8,11 +8,12 @@ from .utils import findIndex
 
 
 COLORS = {
-        "black": pygame.Color("black"), # (0, 0, 0)
-        "darkorange": pygame.Color("darkorange"), # (255, 140, 0)
-        "darkslategray": pygame.Color("darkslategray"), # (47, 79, 79)
-        "saddlebrown": pygame.Color("saddlebrown"), # (139, 69, 19)
-        "forestgreen": pygame.Color("forestgreen") # Don't know.
+        "black": pygame.Color("black"),
+        "darkorange": pygame.Color("darkorange"),
+        "darkslategray": pygame.Color("darkslategray"),
+        "saddlebrown": pygame.Color("saddlebrown"),
+        "forestgreen": pygame.Color("forestgreen"),
+        "red": pygame.Color("red")
         }
 
 
@@ -159,6 +160,31 @@ class Cell():
         self.visitedBool = True
 
 
+class Food(Cell):
+
+    def __init__(self, args, tiles, screen):
+        index = self.getRandomIndex(tiles["numbTiles"])
+        super(Food, self).__init__(args, index, tiles, screen)
+
+    def drawFood(self):
+        col = self.index["column"]*self.tiles["tileWidth"]+self.THICKNESS
+        row = self.index["row"]*self.tiles["tileHeight"]+self.THICKNESS
+        colDest = self.tiles["tileWidth"]-self.THICKNESS
+        rowDest = self.tiles["tileHeight"]-self.THICKNESS
+        pygame.draw.rect(self.screen, COLORS["red"],
+                         (col, row, colDest, rowDest))
+
+    def getRandomIndex(self, numbTiles):
+        assert isinstance(numbTiles, int)
+
+        col = 0
+        row = 0
+        while col == 0 and row == 0:
+            col = randint(0, numbTiles-1)
+            row = randint(0, numbTiles-1)
+        return {"column": col, "row": row}
+
+
 class Maze():
 
     THICKNESS = 2
@@ -176,7 +202,8 @@ class Maze():
                 }
         self.fps = self.args.fps
 
-        self.gridCells = ()
+        self.gridCells = []
+        self.foodCells = []
         self.currentCell = None
         self.nextCell = None
         self.running = False
@@ -202,6 +229,8 @@ class Maze():
         self.mazeSurface.fill(COLORS["darkslategray"])
         for cell in self.gridCells:
             cell.draw()
+        for foodCell in self.foodCells:
+            foodCell.drawFood()
         self.currentCell.drawCurrentCell()
 
     def drawScoreSurface(self):
@@ -313,6 +342,8 @@ class Maze():
                           for row in range(self.tiles["numbTiles"])]
         for cell in self.gridCells:
             cell.addGridCellsRef(self.gridCells)
+        self.foodCells = [Food(self.args, self.tiles, self.mazeSurface)
+                                for _ in range(self.args.food)]
         self.currentCell = self.gridCells[0]
         self.nextCell = None
         self.points = 0
