@@ -252,6 +252,11 @@ class Maze():
         pygame.display.flip()
         self.clock.tick(self.fps)
 
+    def eatFood(self, foodCell):
+        self.points += 10
+        self.foodCells.remove(foodCell)
+        self.foodCells.append(Food(self.args, self.tiles, self.mazeSurface))
+
     def generateMaze(self):
         self.reset()
         breakCount = 1
@@ -317,6 +322,11 @@ class Maze():
             if self.args.debug:
                 print(f"Points: {self.points}")
         else:
+            nindex = nextCell.getIndex()
+            for food in self.foodCells:
+                findex = food.getIndex()
+                if findex[0] == nindex[0] and findex[1] == nindex[1]:
+                    self.eatFood(food)
             self.currentCell = nextCell
 
     def removeWalls(self, currentCell, nextCell):
