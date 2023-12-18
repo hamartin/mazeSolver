@@ -179,6 +179,7 @@ class Maze():
         self.currentCell = None
         self.nextCell = None
         self.running = False
+        self.points = 0
 
         pygame.init()
         # Adding THICKNESS here so that the outer most right lines and lower
@@ -265,7 +266,10 @@ class Maze():
 
         # The cell to move to if we are not colliding with anything.
         nextCell = self.gridCells[findIndex(col, row, self.tiles["numbTiles"])]
-        if not self.currentCell.collide(nextCell):
+        if self.currentCell.collide(nextCell):
+            print(f"Points: {self.points}")
+            self.points -= 1
+        else:
             self.currentCell = nextCell
 
     def removeWalls(self, currentCell, nextCell):
@@ -293,6 +297,7 @@ class Maze():
             cell.addGridCellsRef(self.gridCells)
         self.currentCell = self.gridCells[0]
         self.nextCell = None
+        self.points = 0
 
     def run(self):
         self.reset()
