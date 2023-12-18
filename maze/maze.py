@@ -11,7 +11,8 @@ COLORS = {
         "black": pygame.Color("black"), # (0, 0, 0)
         "darkorange": pygame.Color("darkorange"), # (255, 140, 0)
         "darkslategray": pygame.Color("darkslategray"), # (47, 79, 79)
-        "saddlebrown": pygame.Color("saddlebrown") # (139, 69, 19)
+        "saddlebrown": pygame.Color("saddlebrown"), # (139, 69, 19)
+        "forestgreen": pygame.Color("forestgreen") # Don't know.
         }
 
 
@@ -182,6 +183,9 @@ class Maze():
         self.points = 0
 
         pygame.init()
+        # Some fonts used in the application.
+        self.font = pygame.font.SysFont('Impact', 150)
+        self.text_font = pygame.font.SysFont('Impact', 80)
         # Adding THICKNESS here so that the outer most right lines and lower
         # lines does not get drawn outside the window.
         self.mazeSurface = pygame.Surface((self.size["width"]+self.THICKNESS,
@@ -202,6 +206,12 @@ class Maze():
 
     def drawScoreSurface(self):
         self.scoreSurface.fill(COLORS["darkslategray"])
+        self.scoreText = self.text_font.render("Score:", True,
+                                               COLORS["forestgreen"])
+        self.scoreSurface.blit(self.scoreText, (50, 150))
+        self.score = self.font.render(f"{self.points}", True,
+                                      COLORS["forestgreen"])
+        self.scoreSurface.blit(self.score, (70, 230))
 
     def drawScreen(self):
         self.screen.fill(COLORS["darkslategray"])
@@ -275,7 +285,8 @@ class Maze():
         nextCell = self.gridCells[findIndex(col, row, self.tiles["numbTiles"])]
         if self.currentCell.collide(nextCell):
             self.points -= 1
-            print(f"Points: {self.points}")
+            if self.args.debug:
+                print(f"Points: {self.points}")
         else:
             self.currentCell = nextCell
 
