@@ -4,6 +4,8 @@ from random import choice
 
 import pygame
 
+from .utils import findIndex
+
 
 COLORS = {
         "black": pygame.Color("black"), # (0, 0, 0)
@@ -46,13 +48,12 @@ class Cell():
         return self.visitedBool
 
     def checkCell(self, col, row):
-        findIndex = lambda col, row: row+col*self.tiles["numbTiles"]
         if (col < 0
              or col > self.tiles["numbTiles"]-1
              or row < 0
              or row > self.tiles["numbTiles"]-1):
             return None
-        return self.gridCells[findIndex(col, row)]
+        return self.gridCells[findIndex(col, row, self.tiles["numbTiles"])]
 
     def checkNeighbours(self):
         neighbours = []
@@ -112,8 +113,10 @@ class Cell():
         pygame.draw.rect(self.screen, COLORS["saddlebrown"],
                          (col, row, colDest, rowDest))
 
-    def getIndex(self, colrow):
-        assert colrow in ["column", "row"]
+    def getIndex(self, colrow=None):
+        assert colrow is None or colrow in ["column", "row"]
+        if not colrow:
+            return self.index["column"], self.index["row"]
         return self.index[colrow]
 
     def removeWall(self, wall):
@@ -188,6 +191,8 @@ class Maze():
             elif stack:
                 self.currentCell = stack.pop()
 
+        self.currentCell = self.gridCells[0]
+
     def getInput(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -201,6 +206,31 @@ class Maze():
                     self.reset()
                 elif event.key == pygame.K_g:
                     self.generateMaze()
+                elif event.key == pygame.K_LEFT:
+                    self.move("left")
+                elif event.key == pygame.K_RIGHT:
+                    self.move("right")
+                elif event.key == pygame.K_UP:
+                    self.move("up")
+                elif event.key == pygame.K_DOWN:
+                    self.move("down")
+
+    def move(self, direction):
+        assert direction in ["left", "up", "right", "down"]
+        col, row = self.currentCell.getIndex()
+        if direction == "left":
+            if col > 0:
+                col -= 1
+        elif direction == "right":
+            if col < self.tiles["numbTiles"]-1:
+                col += 1
+        elif direction == "up":
+            if row > 0:
+                row -= 1
+        elif direction == "down":
+            if row < self.tiles["numbTiles"]-1:
+                row += 1
+        self.currentCell = self.gridCells[findIndex(col, row, self.tiles["numbTiles"])]
 
     def removeWalls(self, currentCell, nextCell):
         dcol = currentCell.getIndex("column")-nextCell.getIndex("column")
