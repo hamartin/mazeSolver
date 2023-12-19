@@ -1,5 +1,7 @@
 
 
+import io
+
 from random import choice, randint
 
 import pygame
@@ -159,6 +161,22 @@ class Cell():
     def visited(self):
         self.visitedBool = True
 
+    def wallCollide(self, direction):
+        assert direction in ["left", "up", "right", "down"]
+        col, row = self.getIndex()
+        ret = False
+
+        if direction == "left" and col == 0:
+            ret = True
+        elif direction == "right" and col == self.tiles["numbTiles"]-1:
+            ret = True
+        elif direction == "up" and row == 0:
+            ret = True
+        elif direction == "down" and row == self.tiles["numbTiles"]-1:
+            ret = True
+
+        return ret
+
 
 class Food(Cell):
 
@@ -208,6 +226,8 @@ class Maze():
         self.nextCell = None
         self.running = False
         self.points = 0
+        self.lives = 3
+        self.highscore = 0
 
         pygame.init()
         # Some fonts used in the application.
@@ -234,13 +254,40 @@ class Maze():
         self.currentCell.drawCurrentCell()
 
     def drawScoreSurface(self):
+        dh = self.size["height"]/3
+        margin = 5
+
         self.scoreSurface.fill(COLORS["darkslategray"])
+
+        # Lives score
+        self.livesText = self.text_font.render("Lives:", True,
+                                               COLORS["forestgreen"])
+        self.scoreSurface.blit(self.livesText, (50, margin))
+        self.livesPoints = self.font.render(f"{self.lives}", True,
+                                            COLORS["forestgreen"])
+        self.scoreSurface.blit(
+                self.livesPoints,
+                (70, self.livesText.get_height()+margin))
+
+        # Score
         self.scoreText = self.text_font.render("Score:", True,
                                                COLORS["forestgreen"])
-        self.scoreSurface.blit(self.scoreText, (50, 150))
+        self.scoreSurface.blit(self.scoreText, (50, dh+margin))
         self.score = self.font.render(f"{self.points}", True,
                                       COLORS["forestgreen"])
-        self.scoreSurface.blit(self.score, (70, 230))
+        self.scoreSurface.blit(
+                self.score,
+                (70, dh+self.scoreText.get_height()+margin))
+
+        # High score
+        self.highScoreText = self.text_font.render("High Score:", True,
+                                                   COLORS["forestgreen"])
+        self.scoreSurface.blit(self.highScoreText, (50, 2*dh+margin))
+        self.highScorePoints = self.font.render(f"{self.highscore}", True,
+                                                COLORS["forestgreen"])
+        self.scoreSurface.blit(
+                self.highScorePoints,
+                (70, 2*dh+self.highScoreText.get_height()+margin))
 
     def drawScreen(self):
         self.screen.fill(COLORS["darkslategray"])
@@ -254,6 +301,8 @@ class Maze():
 
     def eatFood(self, foodCell):
         self.points += self.args.foodpoint
+        if self.args.debug:
+            print(f"I ate food: +{self.args.foodpoint} points -> Points: {self.points}")
         self.foodCells.remove(foodCell)
         self.foodCells.append(Food(self.args, self.tiles, self.mazeSurface))
 
@@ -317,10 +366,11 @@ class Maze():
 
         # The cell to move to if we are not colliding with anything.
         nextCell = self.gridCells[findIndex(col, row, self.tiles["numbTiles"])]
-        if self.currentCell.collide(nextCell):
-            self.points -= 1
+        if (self.currentCell.collide(nextCell) or
+                self.currentCell.wallCollide(direction)):
+            self.lives -= 1
             if self.args.debug:
-                print(f"Points: {self.points}")
+                print(f"Lives: {self.lives}")
         else:
             nindex = nextCell.getIndex()
             for food in self.foodCells:
@@ -357,12 +407,19 @@ class Maze():
         self.currentCell = self.gridCells[0]
         self.nextCell = None
         self.points = 0
+        self.lives = 3
 
     def run(self):
         self.reset()
 
         self.running = True
         while self.running:
-            #self.updateScreen()
             self.drawScreen()
+            self.updateGame()
             self.getInput()
+
+    def updateGame(self):
+        if self.points > self.highscore:
+            self.highscore = self.points
+        if self.lives < 1:
+            self.generateMaze()
