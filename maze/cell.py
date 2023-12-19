@@ -18,12 +18,12 @@ class Cell():
             }
     THICKNESS = 2
 
-    def __init__(self, args, index, tiles, screen):
+    def __init__(self, args, index, tileSize, screen):
         self.args = args
         # self.index = {"column": val, "row": val}
         self.index = index
-        # self.tiles = {"numbTiles": val, "tileWidth": val, "tileHeight": val}
-        self.tiles = tiles
+        # self.tileSize = (width, height)
+        self.tileSize = tileSize
         self.screen = screen
 
         self.gridCells = []
@@ -36,7 +36,7 @@ class Cell():
         self.visitedBool = False
 
     def __str__(self):
-        return f"Cell(index={self.index}, tiles={self.tiles})"
+        return f"Cell(index={self.index}, tiles={self.args.tiles})"
 
     def __repr__(self):
         return self.__str__()
@@ -49,11 +49,11 @@ class Cell():
 
     def checkCell(self, col, row):
         if (col < 0
-             or col > self.tiles["numbTiles"]-1
+             or col > self.args.tiles-1
              or row < 0
-             or row > self.tiles["numbTiles"]-1):
+             or row > self.args.tiles-1):
             return None
-        return self.gridCells[findIndex(col, row, self.tiles["numbTiles"])]
+        return self.gridCells[findIndex(col, row, self.args.tiles)]
 
     def checkNeighbours(self):
         neighbours = []
@@ -98,10 +98,10 @@ class Cell():
             return wall
 
     def draw(self):
-        col = self.index["column"]*self.tiles["tileWidth"]
-        row = self.index["row"]*self.tiles["tileHeight"]
-        colDest = self.tiles["tileWidth"]+self.THICKNESS
-        rowDest = self.tiles["tileHeight"]+self.THICKNESS
+        col = self.index["column"]*self.tileSize[0]
+        row = self.index["row"]*self.tileSize[1]
+        colDest = self.tileSize[0]+self.THICKNESS
+        rowDest = self.tileSize[1]+self.THICKNESS
         if self.visitedBool:
             pygame.draw.rect(
                     self.screen, self.COLORS["black"],
@@ -110,32 +110,32 @@ class Cell():
             pygame.draw.line(
                     self.screen, self.COLORS["darkorange"],
                     (col, row),
-                    (col+self.tiles["tileWidth"], row),
+                    (col+self.tileSize[0], row),
                     self.THICKNESS)
         if self.walls["right"]:
             pygame.draw.line(
                     self.screen, self.COLORS["darkorange"],
-                    (col+self.tiles["tileWidth"], row),
-                    (col+self.tiles["tileWidth"], row+self.tiles["tileHeight"]),
+                    (col+self.tileSize[0], row),
+                    (col+self.tileSize[0], row+self.tileSize[1]),
                     self.THICKNESS)
         if self.walls["bottom"]:
             pygame.draw.line(
                     self.screen, self.COLORS["darkorange"],
-                    (col, row+self.tiles["tileHeight"]),
-                    (col+self.tiles["tileWidth"], row+self.tiles["tileHeight"]),
+                    (col, row+self.tileSize[1]),
+                    (col+self.tileSize[0], row+self.tileSize[1]),
                     self.THICKNESS)
         if self.walls["left"]:
             pygame.draw.line(
                     self.screen, self.COLORS["darkorange"],
                     (col, row),
-                    (col, row+self.tiles["tileHeight"]),
+                    (col, row+self.tileSize[1]),
                     self.THICKNESS)
 
     def drawCurrentCell(self):
-        col = self.index["column"]*self.tiles["tileWidth"]+self.THICKNESS
-        row = self.index["row"]*self.tiles["tileHeight"]+self.THICKNESS
-        colDest = self.tiles["tileWidth"]-self.THICKNESS
-        rowDest = self.tiles["tileHeight"]-self.THICKNESS
+        col = self.index["column"]*self.tileSize[0]+self.THICKNESS
+        row = self.index["row"]*self.tileSize[1]+self.THICKNESS
+        colDest = self.tileSize[0]-self.THICKNESS
+        rowDest = self.tileSize[1]-self.THICKNESS
         pygame.draw.rect(self.screen, self.COLORS["saddlebrown"],
                          (col, row, colDest, rowDest))
 
@@ -163,11 +163,11 @@ class Cell():
 
         if direction == "left" and col == 0:
             ret = True
-        elif direction == "right" and col == self.tiles["numbTiles"]-1:
+        elif direction == "right" and col == self.args.tiles-1:
             ret = True
         elif direction == "up" and row == 0:
             ret = True
-        elif direction == "down" and row == self.tiles["numbTiles"]-1:
+        elif direction == "down" and row == self.args.tiles-1:
             ret = True
 
         return ret

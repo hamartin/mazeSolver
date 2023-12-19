@@ -22,25 +22,29 @@ class Maze():
 
     def __init__(self, args):
         self.args = args
-        self.size = {
-                "width": self.args.width,
-                "height": self.args.height
-                }
-        self.tiles = {
-                "numbTiles": self.args.tiles,
-                "tileWidth": self.size["width"]//self.args.tiles,
-                "tileHeight": self.size["height"]//self.args.tiles
-                }
-        self.fps = self.args.fps
+        self.tileWidth = self.args.width//self.args.tiles
+        self.tileHeight = self.args.height//self.args.tiles
 
+        # Cell variables
         self.gridCells = []
         self.foodCells = []
+        self.player = None
+
+        # Game numbers
+        self.score = 0
+        self.highscore = 0
+        self.lives = 3
+
+        self._pygameinit()
+
+    def _pygameInit(self):
+        # TODO: We need to get rid of the current cell as the player replaces it
+        # in the game. However in the maze generation, the current cell needs to
+        # be aware of.
         self.currentCell = None
         self.nextCell = None
+
         self.running = False
-        self.points = 0
-        self.lives = 3
-        self.highscore = 0
 
         pygame.init()
         # Some fonts used in the application.
@@ -48,14 +52,14 @@ class Maze():
         self.text_font = pygame.font.SysFont('Impact', 80)
         # Adding THICKNESS here so that the outer most right lines and lower
         # lines does not get drawn outside the window.
-        self.mazeSurface = pygame.Surface((self.size["width"]+self.THICKNESS,
-                                           self.size["height"]+self.THICKNESS))
+        self.mazeSurface = pygame.Surface((self.args.width+self.THICKNESS,
+                                           self.args.height+self.THICKNESS))
         self.scoreSurface = pygame.Surface((300,
-                                            self.size["height"]+self.THICKNESS))
+                                            self.args.height+self.THICKNESS))
         # The menu on the right is 300 wide.
         self.screen = pygame.display.set_mode(
-                (self.size["width"]+300,
-                 self.size["height"]+self.THICKNESS))
+                (self.args.width+300,
+                 self.args.height+self.THICKNESS))
         self.clock = pygame.time.Clock()
 
     def drawMazeSurface(self):
@@ -67,7 +71,7 @@ class Maze():
         self.currentCell.drawCurrentCell()
 
     def drawScoreSurface(self):
-        dh = self.size["height"]/3
+        dh = self.args.height/3
         margin = 5
 
         self.scoreSurface.fill(self.COLORS["darkslategray"])
@@ -86,10 +90,10 @@ class Maze():
         self.scoreText = self.text_font.render("Score:", True,
                                                self.COLORS["forestgreen"])
         self.scoreSurface.blit(self.scoreText, (50, dh+margin))
-        self.score = self.font.render(f"{self.points}", True,
+        self.scoret = self.font.render(f"{self.score}", True,
                                       self.COLORS["forestgreen"])
         self.scoreSurface.blit(
-                self.score,
+                self.scoret,
                 (70, dh+self.scoreText.get_height()+margin))
 
         # High score
@@ -107,17 +111,17 @@ class Maze():
         self.drawMazeSurface()
         self.drawScoreSurface()
         self.screen.blit(self.mazeSurface, (0, 0))
-        self.screen.blit(self.scoreSurface, (self.size["width"]+1, 0))
+        self.screen.blit(self.scoreSurface, (self.args.width+1, 0))
 
         pygame.display.flip()
-        self.clock.tick(self.fps)
+        self.clock.tick(self.args.fps)
 
     def eatFood(self, foodCell):
-        self.points += self.args.foodpoint
+        self.score += self.args.foodpoint
         if self.args.debug:
-            print(f"I ate food: +{self.args.foodpoint} points -> Points: {self.points}")
+            print(f"I ate food: +{self.args.foodpoint} points -> Points: {self.score}")
         self.foodCells.remove(foodCell)
-        self.foodCells.append(Food(self.args, self.tiles, self.mazeSurface))
+        self.foodCells.append(Food(self.args, (self.tileWidth, self.tileHeight), self.mazeSurface))
 
     def generateMaze(self):
         self.reset()
@@ -168,17 +172,17 @@ class Maze():
             if col > 0:
                 col -= 1
         elif direction == "right":
-            if col < self.tiles["numbTiles"]-1:
+            if col < self.args.tiles-1:
                 col += 1
         elif direction == "up":
             if row > 0:
                 row -= 1
         elif direction == "down":
-            if row < self.tiles["numbTiles"]-1:
+            if row < self.args.tiles-1:
                 row += 1
 
         # The cell to move to if we are not colliding with anything.
-        nextCell = self.gridCells[findIndex(col, row, self.tiles["numbTiles"])]
+        nextCell = self.gridCells[findIndex(col, row, self.args.tiles)]
         if (self.currentCell.collide(nextCell) or
                 self.currentCell.wallCollide(direction)):
             self.lives -= 1
@@ -209,17 +213,21 @@ class Maze():
             nextCell.removeWall("top")
 
     def reset(self):
-        self.gridCells = [Cell(self.args, {"column": col, "row": row},
-                               self.tiles, self.mazeSurface)
-                          for col in range(self.tiles["numbTiles"])
-                          for row in range(self.tiles["numbTiles"])]
+        self.gridCells = [Cell(self.args,
+                               {"column": col, "row": row},
+                               (self.tileWidth, self.tileHeight),
+                               self.mazeSurface)
+                          for col in range(self.args.tiles)
+                          for row in range(self.args.tiles)]
         for cell in self.gridCells:
             cell.addGridCellsRef(self.gridCells)
-        self.foodCells = [Food(self.args, self.tiles, self.mazeSurface)
-                                for _ in range(self.args.food)]
+        self.foodCells = [Food(self.args,
+                               (self.tileWidth, self.tileHeight),
+                               self.mazeSurface)
+                          for _ in range(self.args.food)]
         self.currentCell = self.gridCells[0]
         self.nextCell = None
-        self.points = 0
+        self.score = 0
         self.lives = 3
 
     def run(self):
@@ -232,7 +240,7 @@ class Maze():
             self.getInput()
 
     def updateGame(self):
-        if self.points > self.highscore:
-            self.highscore = self.points
+        if self.score > self.highscore:
+            self.highscore = self.score
         if self.lives < 1:
             self.generateMaze()

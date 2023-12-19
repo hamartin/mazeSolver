@@ -13,15 +13,15 @@ class Food(Cell):
             "red": pygame.Color("red")
             }
 
-    def __init__(self, args, tiles, screen):
-        index = self.getRandomIndex(tiles["numbTiles"])
-        super(Food, self).__init__(args, index, tiles, screen)
+    def __init__(self, args, tileSize, screen):
+        index = self.getRandomIndex(args.tiles)
+        super(Food, self).__init__(args, index, tileSize, screen)
 
     def drawFood(self):
-        col = self.index["column"]*self.tiles["tileWidth"]+self.THICKNESS
-        row = self.index["row"]*self.tiles["tileHeight"]+self.THICKNESS
-        colDest = self.tiles["tileWidth"]-self.THICKNESS
-        rowDest = self.tiles["tileHeight"]-self.THICKNESS
+        col = self.index["column"]*self.tileSize[0]+self.THICKNESS
+        row = self.index["row"]*self.tileSize[1]+self.THICKNESS
+        colDest = self.tileSize[0]-self.THICKNESS
+        rowDest = self.tileSize[1]-self.THICKNESS
         pygame.draw.rect(self.screen, self.COLORS["red"],
                          (col, row, colDest, rowDest))
 
