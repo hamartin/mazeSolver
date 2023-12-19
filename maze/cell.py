@@ -107,11 +107,15 @@ class Cell():
                     self.screen, self.COLORS["black"],
                     (col, row, colDest, rowDest))
         if self.walls["top"]:
-            pygame.draw.line(
-                    self.screen, self.COLORS["darkorange"],
-                    (col, row),
-                    (col+self.tileSize[0], row),
-                    self.THICKNESS)
+            try:
+                pygame.draw.line(
+                        self.screen, self.COLORS["darkorange"],
+                        (col, row),
+                        (col+self.tileSize[0], row),
+                        self.THICKNESS)
+            except:
+                print(self.COLORS)
+                raise
         if self.walls["right"]:
             pygame.draw.line(
                     self.screen, self.COLORS["darkorange"],
