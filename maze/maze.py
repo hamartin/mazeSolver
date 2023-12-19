@@ -35,7 +35,7 @@ class Maze():
         self.highscore = 0
         self.lives = 3
 
-        self._pygameinit()
+        self._pygameInit()
 
     def _pygameInit(self):
         # TODO: We need to get rid of the current cell as the player replaces it
