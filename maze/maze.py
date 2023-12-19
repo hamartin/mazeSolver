@@ -410,7 +410,7 @@ class Maze():
         self.lives = 3
 
     def run(self):
-        self.reset()
+        self.generateMaze()
 
         self.running = True
         while self.running:
