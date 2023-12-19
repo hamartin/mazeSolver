@@ -2,209 +2,22 @@
 
 import io
 
-from random import choice, randint
+from random import randint
 
 import pygame
 
+from .cell import Cell
+from .food import Food
+from .player import Player
 from .utils import findIndex
-
-
-COLORS = {
-        "black": pygame.Color("black"),
-        "darkorange": pygame.Color("darkorange"),
-        "darkslategray": pygame.Color("darkslategray"),
-        "saddlebrown": pygame.Color("saddlebrown"),
-        "forestgreen": pygame.Color("forestgreen"),
-        "red": pygame.Color("red")
-        }
-
-
-class Cell():
-
-    THICKNESS = 2
-
-    def __init__(self, args, index, tiles, screen):
-        self.args = args
-        # self.index = {"column": val, "row": val}
-        self.index = index
-        # self.tiles = {"numbTiles": val, "tileWidth": val, "tileHeight": val}
-        self.tiles = tiles
-        self.screen = screen
-
-        self.gridCells = []
-        self.walls = {
-                "top": True,
-                "right": True,
-                "bottom": True,
-                "left": True
-                }
-        self.visitedBool = False
-
-    def __str__(self):
-        return f"Cell(index={self.index}, tiles={self.tiles})"
-
-    def __repr__(self):
-        return self.__str__()
-
-    def addGridCellsRef(self, gridCells):
-        self.gridCells = gridCells
-
-    def beenVisited(self):
-        return self.visitedBool
-
-    def checkCell(self, col, row):
-        if (col < 0
-             or col > self.tiles["numbTiles"]-1
-             or row < 0
-             or row > self.tiles["numbTiles"]-1):
-            return None
-        return self.gridCells[findIndex(col, row, self.tiles["numbTiles"])]
-
-    def checkNeighbours(self):
-        neighbours = []
-        top = self.checkCell(self.index["column"], self.index["row"]-1)
-        right = self.checkCell(self.index["column"]+1, self.index["row"])
-        bottom = self.checkCell(self.index["column"], self.index["row"]+1)
-        left = self.checkCell(self.index["column"]-1, self.index["row"])
-        if top and not top.beenVisited():
-            neighbours.append(top)
-        if right and not right.beenVisited():
-            neighbours.append(right)
-        if bottom and not bottom.beenVisited():
-            neighbours.append(bottom)
-        if left and not left.beenVisited():
-            neighbours.append(left)
-        return choice(neighbours) if neighbours else None
-
-    def collide(self, cell):
-        assert isinstance(cell, Cell)
-        dcol = self.index["column"]-cell.getIndex("column")
-        drow = self.index["row"]-cell.getIndex("row")
-
-        if dcol == -1:
-            wall = cell.getWall("left")
-            if wall and self.args.debug:
-                print("Collision with right cell.")
-            return wall
-        elif dcol == 1:
-            wall = cell.getWall("right")
-            if wall and self.args.debug:
-                print("Collision with left cell.")
-            return wall
-        elif drow == -1:
-            wall = cell.getWall("top")
-            if wall and self.args.debug:
-                print("Collision with cell below.")
-            return wall
-        elif drow == 1:
-            wall = cell.getWall("bottom")
-            if wall and self.args.debug:
-                print("Collision with cell above.")
-            return wall
-
-    def draw(self):
-        col = self.index["column"]*self.tiles["tileWidth"]
-        row = self.index["row"]*self.tiles["tileHeight"]
-        colDest = self.tiles["tileWidth"]+self.THICKNESS
-        rowDest = self.tiles["tileHeight"]+self.THICKNESS
-        if self.visitedBool:
-            pygame.draw.rect(
-                    self.screen, COLORS["black"],
-                    (col, row, colDest, rowDest))
-        if self.walls["top"]:
-            pygame.draw.line(
-                    self.screen, COLORS["darkorange"],
-                    (col, row),
-                    (col+self.tiles["tileWidth"], row),
-                    self.THICKNESS)
-        if self.walls["right"]:
-            pygame.draw.line(
-                    self.screen, COLORS["darkorange"],
-                    (col+self.tiles["tileWidth"], row),
-                    (col+self.tiles["tileWidth"], row+self.tiles["tileHeight"]),
-                    self.THICKNESS)
-        if self.walls["bottom"]:
-            pygame.draw.line(
-                    self.screen, COLORS["darkorange"],
-                    (col, row+self.tiles["tileHeight"]),
-                    (col+self.tiles["tileWidth"], row+self.tiles["tileHeight"]),
-                    self.THICKNESS)
-        if self.walls["left"]:
-            pygame.draw.line(
-                    self.screen, COLORS["darkorange"],
-                    (col, row),
-                    (col, row+self.tiles["tileHeight"]),
-                    self.THICKNESS)
-
-    def drawCurrentCell(self):
-        col = self.index["column"]*self.tiles["tileWidth"]+self.THICKNESS
-        row = self.index["row"]*self.tiles["tileHeight"]+self.THICKNESS
-        colDest = self.tiles["tileWidth"]-self.THICKNESS
-        rowDest = self.tiles["tileHeight"]-self.THICKNESS
-        pygame.draw.rect(self.screen, COLORS["saddlebrown"],
-                         (col, row, colDest, rowDest))
-
-    def getIndex(self, colrow=None):
-        assert colrow is None or colrow in ["column", "row"]
-        if not colrow:
-            return self.index["column"], self.index["row"]
-        return self.index[colrow]
-
-    def getWall(self, direction):
-        assert direction in ["left", "right", "top", "bottom"]
-        return self.walls[direction]
-
-    def removeWall(self, wall):
-        assert wall in ["left", "top", "right", "bottom"]
-        self.walls[wall] = False
-
-    def visited(self):
-        self.visitedBool = True
-
-    def wallCollide(self, direction):
-        assert direction in ["left", "up", "right", "down"]
-        col, row = self.getIndex()
-        ret = False
-
-        if direction == "left" and col == 0:
-            ret = True
-        elif direction == "right" and col == self.tiles["numbTiles"]-1:
-            ret = True
-        elif direction == "up" and row == 0:
-            ret = True
-        elif direction == "down" and row == self.tiles["numbTiles"]-1:
-            ret = True
-
-        return ret
-
-
-class Food(Cell):
-
-    def __init__(self, args, tiles, screen):
-        index = self.getRandomIndex(tiles["numbTiles"])
-        super(Food, self).__init__(args, index, tiles, screen)
-
-    def drawFood(self):
-        col = self.index["column"]*self.tiles["tileWidth"]+self.THICKNESS
-        row = self.index["row"]*self.tiles["tileHeight"]+self.THICKNESS
-        colDest = self.tiles["tileWidth"]-self.THICKNESS
-        rowDest = self.tiles["tileHeight"]-self.THICKNESS
-        pygame.draw.rect(self.screen, COLORS["red"],
-                         (col, row, colDest, rowDest))
-
-    def getRandomIndex(self, numbTiles):
-        assert isinstance(numbTiles, int)
-
-        col = 0
-        row = 0
-        while col == 0 and row == 0:
-            col = randint(0, numbTiles-1)
-            row = randint(0, numbTiles-1)
-        return {"column": col, "row": row}
 
 
 class Maze():
 
+    COLORS = {
+            "darkslategray": pygame.Color("darkslategray"),
+            "forestgreen": pygame.Color("forestgreen"),
+            }
     THICKNESS = 2
 
     def __init__(self, args):
@@ -246,7 +59,7 @@ class Maze():
         self.clock = pygame.time.Clock()
 
     def drawMazeSurface(self):
-        self.mazeSurface.fill(COLORS["darkslategray"])
+        self.mazeSurface.fill(self.COLORS["darkslategray"])
         for cell in self.gridCells:
             cell.draw()
         for foodCell in self.foodCells:
@@ -257,40 +70,40 @@ class Maze():
         dh = self.size["height"]/3
         margin = 5
 
-        self.scoreSurface.fill(COLORS["darkslategray"])
+        self.scoreSurface.fill(self.COLORS["darkslategray"])
 
         # Lives score
         self.livesText = self.text_font.render("Lives:", True,
-                                               COLORS["forestgreen"])
+                                               self.COLORS["forestgreen"])
         self.scoreSurface.blit(self.livesText, (50, margin))
         self.livesPoints = self.font.render(f"{self.lives}", True,
-                                            COLORS["forestgreen"])
+                                            self.COLORS["forestgreen"])
         self.scoreSurface.blit(
                 self.livesPoints,
                 (70, self.livesText.get_height()+margin))
 
         # Score
         self.scoreText = self.text_font.render("Score:", True,
-                                               COLORS["forestgreen"])
+                                               self.COLORS["forestgreen"])
         self.scoreSurface.blit(self.scoreText, (50, dh+margin))
         self.score = self.font.render(f"{self.points}", True,
-                                      COLORS["forestgreen"])
+                                      self.COLORS["forestgreen"])
         self.scoreSurface.blit(
                 self.score,
                 (70, dh+self.scoreText.get_height()+margin))
 
         # High score
         self.highScoreText = self.text_font.render("High Score:", True,
-                                                   COLORS["forestgreen"])
+                                                   self.COLORS["forestgreen"])
         self.scoreSurface.blit(self.highScoreText, (50, 2*dh+margin))
         self.highScorePoints = self.font.render(f"{self.highscore}", True,
-                                                COLORS["forestgreen"])
+                                                self.COLORS["forestgreen"])
         self.scoreSurface.blit(
                 self.highScorePoints,
                 (70, 2*dh+self.highScoreText.get_height()+margin))
 
     def drawScreen(self):
-        self.screen.fill(COLORS["darkslategray"])
+        self.screen.fill(self.COLORS["darkslategray"])
         self.drawMazeSurface()
         self.drawScoreSurface()
         self.screen.blit(self.mazeSurface, (0, 0))
