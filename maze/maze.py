@@ -8,16 +8,7 @@ import pygame
 
 from .cell import Cell
 from .food import Food
-from .player import Player
 from .utils import findIndex
-
-
-class Crashed(Exception):
-    pass
-class EatenFood(Exception):
-    pass
-class NoLivesLeft(Exception):
-    pass
 
 
 class MazeSurface(pygame.Surface):
@@ -38,8 +29,6 @@ class MazeSurface(pygame.Surface):
         self.nextCell = None
 
     def _eatFood(self, foodCell):
-        if self.args.debug:
-            print(f"I ate food: +{self.args.foodpoint} points -> Points: {self.score}")
         self.foodCells.remove(foodCell)
         self.foodCells.append(Food(self.args, (self.tileWidth, self.tileHeight), self))
 
@@ -83,7 +72,7 @@ class MazeSurface(pygame.Surface):
             cell.draw()
         for cell in self.foodCells:
             cell.draw()
-        self.currentCell.drawCurrentCell()
+        self.currentCell.drawColoredCell(color="saddlebrown")
 
     def move(self, direction):
         assert direction in ["left", "up", "right", "down"]
@@ -245,7 +234,6 @@ class Maze():
         self.clock.tick(self.args.fps)
 
     def getInput(self):
-        """The try except stuff below is bloody ugly. It needs to be fixed!"""
         ret = None
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -269,8 +257,8 @@ class Maze():
         if ret == "crashed":
             if self.scoreSurface.crashed() == "dead":
                 self.reset()
-            elif ret == "eaten":
-                self.scoreSurface.addScore(self.EATENPOINTS)
+        elif ret == "eaten":
+            self.scoreSurface.addScore(self.EATENPOINTS)
 
     def reset(self):
         self.mazeSurface.reset()

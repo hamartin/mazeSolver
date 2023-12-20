@@ -107,15 +107,11 @@ class Cell():
                     self.screen, self.COLORS["black"],
                     (col, row, colDest, rowDest))
         if self.walls["top"]:
-            try:
-                pygame.draw.line(
-                        self.screen, self.COLORS["darkorange"],
-                        (col, row),
-                        (col+self.tileSize[0], row),
-                        self.THICKNESS)
-            except:
-                print(self.COLORS)
-                raise
+            pygame.draw.line(
+                    self.screen, self.COLORS["darkorange"],
+                    (col, row),
+                    (col+self.tileSize[0], row),
+                    self.THICKNESS)
         if self.walls["right"]:
             pygame.draw.line(
                     self.screen, self.COLORS["darkorange"],
@@ -135,12 +131,13 @@ class Cell():
                     (col, row+self.tileSize[1]),
                     self.THICKNESS)
 
-    def drawCurrentCell(self):
+    def drawColoredCell(self, color):
+        assert isinstance(color, str) and color in self.COLORS
         col = self.index["column"]*self.tileSize[0]+self.THICKNESS
         row = self.index["row"]*self.tileSize[1]+self.THICKNESS
         colDest = self.tileSize[0]-self.THICKNESS
         rowDest = self.tileSize[1]-self.THICKNESS
-        pygame.draw.rect(self.screen, self.COLORS["saddlebrown"],
+        pygame.draw.rect(self.screen, self.COLORS[color],
                          (col, row, colDest, rowDest))
 
     def getIndex(self, colrow=None):
