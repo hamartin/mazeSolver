@@ -25,7 +25,7 @@ class MazeSurface(pygame.Surface):
 
         self.foodCells = []
         self.gridCells = []
-        self.currentCell = None
+        self.player = None
         self.nextCell = None
 
     def _eatFood(self, foodCell):
@@ -37,18 +37,18 @@ class MazeSurface(pygame.Surface):
         stack = []
 
         while breakCount != len(self.gridCells):
-            self.currentCell.visited()
-            self.nextCell = self.currentCell.checkNeighbours()
+            self.player.visited()
+            self.nextCell = self.player.checkNeighbours()
             if self.nextCell:
                 self.nextCell.visited()
                 breakCount += 1
-                stack.append(self.currentCell)
-                self._removeWalls(self.currentCell, self.nextCell)
-                self.currentCell = self.nextCell
+                stack.append(self.player)
+                self._removeWalls(self.player, self.nextCell)
+                self.player = self.nextCell
             elif stack:
-                self.currentCell = stack.pop()
+                self.player = stack.pop()
 
-        self.currentCell = self.gridCells[0]
+        self.player = self.gridCells[0]
 
     def _removeWalls(self, currentCell, nextCell):
         dcol = currentCell.getIndex("column")-nextCell.getIndex("column")
@@ -72,11 +72,11 @@ class MazeSurface(pygame.Surface):
             cell.draw()
         for cell in self.foodCells:
             cell.draw()
-        self.currentCell.drawColoredCell(color="saddlebrown")
+        self.player.drawColoredCell(color="saddlebrown")
 
     def move(self, direction):
         assert direction in ["left", "up", "right", "down"]
-        col, row = self.currentCell.getIndex()
+        col, row = self.player.getIndex()
         ret = "moved"
 
         if direction == "left":
@@ -94,8 +94,8 @@ class MazeSurface(pygame.Surface):
 
         # The cell to move to if we are not colliding with anything.
         nextCell = self.gridCells[findIndex(col, row, self.args.tiles)]
-        if (self.currentCell.collide(nextCell)
-                or self.currentCell.wallCollide(direction)):
+        if (self.player.collide(nextCell)
+                or self.player.wallCollide(direction)):
             ret = "crashed"
         else:
             nindex = nextCell.getIndex()
@@ -104,7 +104,7 @@ class MazeSurface(pygame.Surface):
                 if findex[0] == nindex[0] and findex[1] == nindex[1]:
                     self._eatFood(food)
                     ret = "eaten"
-            self.currentCell = nextCell
+            self.player = nextCell
 
         return ret
 
@@ -125,7 +125,7 @@ class MazeSurface(pygame.Surface):
                      self)
                 for _ in range(self.args.food)]
 
-        self.currentCell = self.gridCells[0]
+        self.player = self.gridCells[0]
         self.nextCell = None
         self._generateMaze()
 
